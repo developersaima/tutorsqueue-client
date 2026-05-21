@@ -1,173 +1,299 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import { authClient } from "../../../lib/auth-client";
+import { useRouter } from "next/navigation";
 
-import { LuSearch, LuCalendar, LuFilterX, LuSlidersHorizontal } from "react-icons/lu";
-import TutorCard from "../../../components/TutorCard";
+export default function AddTutorPage() {
+    const router=useRouter()
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
 
-export default function TutorsPage() {
-  const [tutors, setTutors] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  
-  
-  const [queryTrigger, setQueryTrigger] = useState({ search: "", startDate: "", endDate: "" });
+  const onSubmit = async (data) => {
+    try {
+      const { data: tokenData } = await authClient.token();
 
-  useEffect(() => {
-    const fetchTutors = async () => {
-      setLoading(true);
-      try {
-        let url = process.env.NEXT_PUBLIC_URL+"/api/tutors";
-        const params = new URLSearchParams();
-        
-        if (queryTrigger.search) params.append("search", queryTrigger.search);
-        if (queryTrigger.startDate) params.append("startDate", queryTrigger.startDate);
-        if (queryTrigger.endDate) params.append("endDate", queryTrigger.endDate);
-        
-        if (params.toString()) {
-          url += `?${params.toString()}`;
-        }
+      const response = await fetch(process.env.NEXT_PUBLIC_URL+"/api/tutors", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${tokenData?.token}`,
+        },
+        body: JSON.stringify({
+          ...data,
+          hourlyFee: Number(data.hourlyFee),
+          totalSlot: Number(data.totalSlot),
+        }),
+      });
 
-        const res = await fetch(url);
-        const data = await res.json();
-        setTutors(data);
-      } catch (error) {
-        console.error("Error loading tutors:", error);
-      } finally {
-        setLoading(false);
+      if (response.ok) {
+        toast.success("Tutor added successfully!");
+        router.push("/my-tutors")
+        reset();
+      } else {
+        toast.error("Failed to add tutor.");
       }
-    };
-
-    fetchTutors();
-  }, [queryTrigger]);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    setQueryTrigger({ search, startDate, endDate });
-  };
-
-  const handleClearFilters = () => {
-    setSearch("");
-    setStartDate("");
-    setEndDate("");
-    setQueryTrigger({ search: "", startDate: "", endDate: "" });
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong!");
+    }
   };
 
   return (
-    <div className="bg-base-200/40 min-h-screen py-12">
-      <div className="container mx-auto px-4 max-w-7xl">
-        
-        {/* Header Section */}
-        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-          <div className="badge badge-primary badge-outline gap-1.5 px-3 py-2.5 text-xs font-semibold uppercase tracking-wider">
-            <LuSlidersHorizontal className="w-3.5 h-3.5" /> Explore Mentors
+    <div className="max-w-3xl mx-auto my-10 px-4">
+      <div className="bg-base-100 p-8 rounded-xl shadow-md border border-base-200">
+        <h2 className="text-2xl font-bold text-center mb-8">Add New Tutor</h2>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {/* Tutor Name */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">Tutor Name</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Saima Akter"
+              {...register("name", { required: "Name is required" })}
+              className="input input-bordered w-full"
+            />
+            {errors.name && (
+              <span className="text-error text-xs mt-1">
+                {errors.name.message}
+              </span>
+            )}
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-base-content md:text-5xl">
-            Find Your Perfect Tutor
-          </h1>
-          <p className="text-sm md:text-base text-base-content/60 leading-relaxed">
-            Connect with top-rated tutors. Filter by name, institution, or registration dates to find the absolute match for your schedule.
-          </p>
-        </div>
 
-        {/* Search & Filter Panel */}
-        <div className="bg-base-100 p-6 rounded-2xl shadow-sm border border-base-300/60 max-w-5xl mx-auto mb-12">
-          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-            
-            {/* Search Input */}
-            <div className="form-control md:col-span-5">
-              <label className="label pt-0 pb-1.5">
-                <span className="label-text font-bold text-xs text-base-content/70">Search Tutor</span>
-              </label>
-              <div className="relative w-full">
-                <LuSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search by name, university, or location..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="input input-bordered w-full pl-11 bg-base-200/50 focus:bg-base-100 transition-colors"
-                />
-              </div>
-            </div>
+          {/* Photo URL */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">Photo URL</span>
+            </label>
+            <input
+              type="url"
+              placeholder="imgbb / postimage link"
+              {...register("photo", { required: "Photo URL is required" })}
+              className="input input-bordered w-full"
+            />
+            {errors.photo && (
+              <span className="text-error text-xs mt-1">
+                {errors.photo.message}
+              </span>
+            )}
+          </div>
 
-            {/* Start Date */}
-            <div className="form-control md:col-span-3">
-              <label className="label pt-0 pb-1.5">
-                <span className="label-text font-bold text-xs text-base-content/70 flex items-center gap-1">
-                  <LuCalendar className="w-3.5 h-3.5 text-primary" /> Start Date
-                </span>
+          {/* Subject / Category Dropdown */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">
+                Subject / Category
+              </span>
+            </label>
+            <select
+              defaultValue=""
+              {...register("subject", { required: "Select a subject" })}
+              className="select select-bordered w-full"
+            >
+              <option value="" disabled>
+                Select Subject
+              </option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="English">English</option>
+              <option value="ICT">ICT</option>
+            </select>
+            {errors.subject && (
+              <span className="text-error text-xs mt-1">
+                {errors.subject.message}
+              </span>
+            )}
+          </div>
+
+          {/* Available Days and Time */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">
+                Available Days and Time
+              </span>
+            </label>
+            <input
+              type="text"
+              placeholder="Sun - Thu 5:00 PM - 8:00 PM"
+              {...register("availableSlots", {
+                required: "Available schedule is required",
+              })}
+              className="input input-bordered w-full"
+            />
+            {errors.availableSlots && (
+              <span className="text-error text-xs mt-1">
+                {errors.availableSlots.message}
+              </span>
+            )}
+          </div>
+
+          {/* Grid Layout for Fee and Slots */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Hourly Fee */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold">Hourly Fee</span>
               </label>
               <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="input input-bordered w-full bg-base-200/50"
+                type="number"
+                placeholder="500"
+                {...register("hourlyFee", {
+                  required: "Fee is required",
+                  min: 0,
+                })}
+                className="input input-bordered w-full"
               />
+              {errors.hourlyFee && (
+                <span className="text-error text-xs mt-1">
+                  {errors.hourlyFee.message}
+                </span>
+              )}
             </div>
 
-            {/* End Date */}
-            <div className="form-control md:col-span-3">
-              <label className="label pt-0 pb-1.5">
-                <span className="label-text font-bold text-xs text-base-content/70 flex items-center gap-1">
-                  <LuCalendar className="w-3.5 h-3.5 text-secondary" /> End Date
-                </span>
+            {/* Total Slot */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold">Total Slot</span>
               </label>
               <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="input input-bordered w-full bg-base-200/50"
+                type="number"
+                placeholder="10"
+                {...register("totalSlot", {
+                  required: "Slot count is required",
+                  min: 1,
+                })}
+                className="input input-bordered w-full"
               />
+              {errors.totalSlot && (
+                <span className="text-error text-xs mt-1">
+                  {errors.totalSlot.message}
+                </span>
+              )}
             </div>
-
-            {/* Submit Button */}
-            <div className="md:col-span-1 w-full">
-              <button type="submit" className="btn btn-primary w-full shadow-md shadow-primary/10">
-                Find
-              </button>
-            </div>
-          </form>
-
-          {/* Active Filter Clear Badge */}
-          {(queryTrigger.search || queryTrigger.startDate || queryTrigger.endDate) && (
-            <div className="flex justify-end mt-4 pt-3 border-t border-base-200">
-              <button
-                onClick={handleClearFilters}
-                className="btn btn-ghost btn-xs text-error gap-1.5 hover:bg-error/10 rounded-lg normal-case"
-              >
-                <LuFilterX className="w-4 h-4" /> Clear All Filters
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Main Content Area */}
-        {loading ? (
-          <div className="flex flex-col justify-center items-center py-24 space-y-4">
-            <span className="loading loading-spinner loading-lg text-primary"></span>
-            <p className="text-xs font-semibold tracking-wider text-base-content/40 uppercase">Filtering Results...</p>
           </div>
-        ) : tutors.length === 0 ? (
-          <div className="text-center py-20 bg-base-100 rounded-2xl border border-dashed border-base-300 max-w-3xl mx-auto shadow-inner">
-            <div className="w-16 h-16 bg-base-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <LuFilterX className="w-8 h-8 text-base-content/30" />
-            </div>
-            <h3 className="text-xl font-bold text-base-content/80 mb-1">No Tutors Match Your Search</h3>
-            <p className="text-sm text-base-content/50 max-w-sm mx-auto">
-              Try adjusting your date range or keywords to search again.
-            </p>
+
+          {/* Session Start Date */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">
+                Session Start Date
+              </span>
+            </label>
+            <input
+              type="date"
+              {...register("sessionStartDate", {
+                required: "Start date is required",
+              })}
+              className="input input-bordered w-full"
+            />
+            {errors.sessionStartDate && (
+              <span className="text-error text-xs mt-1">
+                {errors.sessionStartDate.message}
+              </span>
+            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-            {tutors.map((tutor) => (
-              <div key={tutor._id} className="h-full transform hover:-translate-y-1 transition-transform duration-300">
-                <TutorCard tutor={tutor} />
-              </div>
-            ))}
+
+          {/* Institution */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">Institution</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Dhaka University"
+              {...register("institution", {
+                required: "Institution is required",
+              })}
+              className="input input-bordered w-full"
+            />
+            {errors.institution && (
+              <span className="text-error text-xs mt-1">
+                {errors.institution.message}
+              </span>
+            )}
           </div>
-        )}
+
+          {/* Experience */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">Experience</span>
+            </label>
+            <textarea
+              placeholder="3 years teaching experience..."
+              {...register("experience", {
+                required: "Experience details are required",
+              })}
+              className="textarea textarea-bordered w-full h-24"
+            />
+            {errors.experience && (
+              <span className="text-error text-xs mt-1">
+                {errors.experience.message}
+              </span>
+            )}
+          </div>
+
+          {/* Location */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">
+                Location (Area/City)
+              </span>
+            </label>
+            <input
+              type="text"
+              placeholder="Khulna"
+              {...register("location", { required: "Location is required" })}
+              className="input input-bordered w-full"
+            />
+            {errors.location && (
+              <span className="text-error text-xs mt-1">
+                {errors.location.message}
+              </span>
+            )}
+          </div>
+
+          {/* Teaching Mode Dropdown */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">Teaching Mode</span>
+            </label>
+            <select
+              defaultValue=""
+              {...register("teachingMode", {
+                required: "Select teaching mode",
+              })}
+              className="select select-bordered w-full"
+            >
+              <option value="" disabled>
+                Select Mode
+              </option>
+              <option value="Online">Online</option>
+              <option value="Offline">Offline</option>
+              <option value="Both">Both</option>
+            </select>
+            {errors.teachingMode && (
+              <span className="text-error text-xs mt-1">
+                {errors.teachingMode.message}
+              </span>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div className="form-control pt-4">
+            <button type="submit" className="btn btn-primary w-full">
+              Submit Tutor
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
