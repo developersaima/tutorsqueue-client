@@ -66,8 +66,8 @@ export default function Navbar() {
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar border border-base-300">
               <div className="w-9 h-9 relative rounded-full overflow-hidden">
                 <Image 
-                  alt="User Profile" 
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb" 
+                  alt={user?.name}
+                  src={user?.image} 
                   fill
                   sizes="36px"
                   className="object-cover"
@@ -80,7 +80,7 @@ export default function Navbar() {
             </ul>
           </div>
         ) : (
-          <Link href="/login" className="btn btn-primary btn-sm px-4">
+          <Link href="/login" className="btn btn-danger btn-sm px-4">
             Login
           </Link>
         )}
