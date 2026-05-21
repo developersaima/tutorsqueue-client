@@ -9,10 +9,13 @@ import {
   LuX,
 } from "react-icons/lu";
 import toast from "react-hot-toast";
-import { useSession } from "../../../lib/auth-client";
+import { authClient, useSession } from "../../../lib/auth-client";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function TutorDetailsPage({ params: paramsPromise }) {
+
+  const router=useRouter()
   const params = use(paramsPromise);
   const { data: session } = useSession();
   const user = session?.user;
@@ -74,14 +77,19 @@ export default function TutorDetailsPage({ params: paramsPromise }) {
       const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:5000";
       const bookingInfo = {
         tutorId: tutor._id,
-        studentName: user?.displayName || "Anonymous Student",
+        studentName: user?.name || "Anonymous Student",
         studentEmail: user?.email,
         studentPhone: phone,
       };
+      const { data: tokenData } = await authClient.token();
 
       const res = await fetch(`${baseUrl}/api/bookings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${tokenData?.token}`,
+        },
+
         body: JSON.stringify(bookingInfo),
       });
 
@@ -91,6 +99,7 @@ export default function TutorDetailsPage({ params: paramsPromise }) {
         setIsModalOpen(false);
         toast.success("Session booked successfully!");
         setPhone("");
+        router.push("/my-bookings")
         fetchTutorDetails();
       } else {
         toast.error(responseData.message);
