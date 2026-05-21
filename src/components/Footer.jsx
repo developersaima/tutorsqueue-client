@@ -1,43 +1,65 @@
-import { LuMail, LuPhone, LuLinkedin } from "react-icons/lu";
-import { FaXTwitter } from "react-icons/fa6";
+import { LuMail, LuPhone, LuLinkedin, LuMapPin } from "react-icons/lu";
+import { FaXTwitter, FaFacebook, FaInstagram } from "react-icons/fa6";
 
 export default function Footer() {
   return (
-    <footer className="footer sm:footer-horizontal p-10 bg-base-200 text-base-content border-t border-b border-base-300">
-      <nav>
-        <h6 className="footer-title text-primary opacity-100">Learning Services</h6>
-        <a className="link link-hover">Medical Admission</a>
-        <a className="link link-hover">Dental Coaching</a>
-        <a className="link link-hover">Biomedical Science</a>
-      </nav>
-      
-      <nav>
-        <h6 className="footer-title">Contact</h6>
-        <span className="flex items-center gap-2 text-sm">
-          <LuMail className="w-4 h-4 text-primary" />
-          info@mediqueue.com
-        </span>
-        <span className="flex items-center gap-2 text-sm">
-          <LuPhone className="w-4 h-4 text-primary" />
-          +880 1234-567890
-        </span>
-      </nav>
-      
-      <nav>
-        <h6 className="footer-title">Social Links</h6>
-        <div className="flex gap-4 text-xl">
-          <a href="#" className="hover:text-primary transition-colors">
-            <FaXTwitter />
-          </a>
-          <a href="#" className="hover:text-primary transition-colors">
-            <LuLinkedin />
-          </a>
+    <footer className="bg-base-100 border-t border-base-200">
+      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-12">
+        
+        
+        <div className="space-y-4">
+          <h2 className="text-2xl font-black text-primary">MediQueue</h2>
+          <p className="text-sm text-base-content/60 leading-relaxed">
+            Connecting students with expert tutors for medical and science excellence. Learn anytime, anywhere.
+          </p>
         </div>
-      </nav>
+
+        
+        <div>
+          <h6 className="font-bold text-base-content mb-6">Expert Subjects</h6>
+          <ul className="space-y-3 text-sm text-base-content/70">
+            <li className="hover:text-primary cursor-pointer transition">Medical Admission</li>
+            <li className="hover:text-primary cursor-pointer transition">Biology & Chemistry</li>
+            <li className="hover:text-primary cursor-pointer transition">Biomedical Science</li>
+            <li className="hover:text-primary cursor-pointer transition">Physics for Medics</li>
+          </ul>
+        </div>
+
+        
+        <div className="space-y-4">
+          <h6 className="font-bold text-base-content mb-2">Get in Touch</h6>
+          <div className="flex items-center gap-3 text-sm text-base-content/70">
+            <LuMail className="text-primary" /> info@mediqueue.com
+          </div>
+          <div className="flex items-center gap-3 text-sm text-base-content/70">
+            <LuPhone className="text-primary" /> +880 1234-567890
+          </div>
+          <div className="flex items-center gap-3 text-sm text-base-content/70">
+            <LuMapPin className="text-primary" /> Dhaka, Bangladesh
+          </div>
+        </div>
+
+        
+        <div>
+          <h6 className="font-bold text-base-content mb-6">Follow Us</h6>
+          <div className="flex gap-4">
+            <a href="#" className="w-10 h-10 rounded-full bg-base-200 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+              <FaFacebook />
+            </a>
+            <a href="#" className="w-10 h-10 rounded-full bg-base-200 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+              <FaXTwitter />
+            </a>
+            <a href="#" className="w-10 h-10 rounded-full bg-base-200 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+              <FaInstagram />
+            </a>
+          </div>
+        </div>
+      </div>
+
       
-      <aside className="w-full text-center sm:text-left mt-4 border-t border-base-300 pt-4 col-span-full">
-        <p>© 2026 MediQueue. All rights reserved.</p>
-      </aside>
+      <div className="max-w-7xl mx-auto px-6 py-8 border-t border-base-200 text-center md:text-left text-sm text-base-content/50">
+        <p>© 2026 MediQueue Learning Platform. All rights reserved.</p>
+      </div>
     </footer>
   );
 }

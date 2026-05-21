@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState, use, useContext } from "react";
+
+import { useEffect, useState, use } from "react";
 import {
   LuCalendar,
   LuMapPin,
@@ -8,31 +9,53 @@ import {
   LuGraduationCap,
   LuX,
 } from "react-icons/lu";
+
 import toast from "react-hot-toast";
 import { authClient, useSession } from "../../../lib/auth-client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-export default function TutorDetailsPage({ params: paramsPromise }) {
 
-  const router=useRouter()
+
+export default function TutorDetailsPage({ params: paramsPromise }) {
+  const router = useRouter();
+
   const params = use(paramsPromise);
+
   const { data: session } = useSession();
+
   const user = session?.user;
+
   const [tutor, setTutor] = useState(null);
+
   const [loading, setLoading] = useState(true);
+
   const [phone, setPhone] = useState("");
+
   const [bookingLoading, setBookingLoading] = useState(false);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchTutorDetails = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:5000";
-      const res = await fetch(`${baseUrl}/api/tutors/${params.id}`);
+      const baseUrl =
+        process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+
+      const res = await fetch(`${baseUrl}/api/tutors/${params.id}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch tutor");
+      }
+
       const data = await res.json();
+
       setTutor(data);
     } catch (error) {
-      console.error("Error fetching tutor:", error);
+      console.log(error);
+
+      toast.error("Failed to load tutor details");
     } finally {
       setLoading(false);
     }
@@ -42,79 +65,11 @@ export default function TutorDetailsPage({ params: paramsPromise }) {
     fetchTutorDetails();
   }, [params.id]);
 
-  const handleBookingClick = () => {
-    if (!user) {
-      toast.error("Please log in first to book a session!");
-      return;
-    }
-
-    const currentDate = new Date();
-    const sessionDate = new Date(tutor.sessionStartDate);
-
-    if (parseInt(tutor.totalSlot) <= 0) {
-      toast.error(
-        "This session is fully booked. You can’t join at the moment.",
-      );
-      return;
-    }
-
-    if (currentDate < sessionDate) {
-      toast.error("Booking is not available yet for this tutor");
-      return;
-    }
-
-    setIsModalOpen(true);
-  };
-
-  const handleConfirmBooking = async () => {
-    if (!phone) {
-      toast.error("Please enter your phone number");
-      return;
-    }
-
-    setBookingLoading(true);
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:5000";
-      const bookingInfo = {
-        tutorId: tutor._id,
-        studentName: user?.name || "Anonymous Student",
-        studentEmail: user?.email,
-        studentPhone: phone,
-      };
-      const { data: tokenData } = await authClient.token();
-
-      const res = await fetch(`${baseUrl}/api/bookings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${tokenData?.token}`,
-        },
-
-        body: JSON.stringify(bookingInfo),
-      });
-
-      const responseData = await res.json();
-
-      if (res.ok) {
-        setIsModalOpen(false);
-        toast.success("Session booked successfully!");
-        setPhone("");
-        router.push("/my-bookings")
-        fetchTutorDetails();
-      } else {
-        toast.error(responseData.message);
-      }
-    } catch (error) {
-      toast.error("Something went wrong!");
-    } finally {
-      setBookingLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen space-y-4">
         <span className="loading loading-spinner loading-lg text-primary"></span>
+
         <p className="text-xs font-semibold uppercase tracking-widest text-base-content/40">
           Loading Details...
         </p>
@@ -129,7 +84,94 @@ export default function TutorDetailsPage({ params: paramsPromise }) {
       </div>
     );
   }
-console.log(tutor)
+
+  const currentDate = new Date();
+
+  const sessionDate = new Date(tutor.sessionStartDate);
+
+  const bookingExpired = currentDate >= sessionDate;
+
+  const noSlotsLeft = parseInt(tutor.totalSlot) <= 0;
+
+  const handleBookingClick = () => {
+    if (!user) {
+      toast.error("Please log in first to book a session!");
+
+      return;
+    }
+
+    if (noSlotsLeft) {
+      toast.error("No slots available right now!");
+
+      return;
+    }
+
+    if (bookingExpired) {
+      toast.error("Booking is closed because the session has started!");
+
+      return;
+    }
+
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!phone) {
+      toast.error("Please enter your phone number");
+
+      return;
+    }
+
+    setBookingLoading(true);
+
+    try {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+
+      const bookingInfo = {
+        tutorId: tutor._id,
+        studentName: user?.name || "Anonymous Student",
+        studentEmail: user?.email,
+        studentPhone: phone,
+      };
+
+      const { data: tokenData } = await authClient.token();
+
+      const res = await fetch(`${baseUrl}/api/bookings`, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${tokenData?.token}`,
+        },
+
+        body: JSON.stringify(bookingInfo),
+      });
+
+      const responseData = await res.json();
+
+      if (res.ok) {
+        toast.success("Session booked successfully!");
+
+        setPhone("");
+
+        setIsModalOpen(false);
+
+        fetchTutorDetails();
+
+        router.push("/my-bookings");
+      } else {
+        toast.error(responseData?.message || "Booking failed");
+      }
+    } catch (error) {
+      console.log(error);
+
+      toast.error("Something went wrong!");
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
   return (
     <div className="bg-base-200/40 min-h-screen py-12 px-4">
       <div className="max-w-5xl mx-auto bg-base-100 rounded-3xl shadow-sm border border-base-300/60 overflow-hidden grid grid-cols-1 md:grid-cols-12">
@@ -147,6 +189,7 @@ console.log(tutor)
             <div className="badge badge-primary badge-outline text-xs font-semibold uppercase tracking-wider mb-3">
               {tutor.subject}
             </div>
+
             <h1 className="text-3xl font-black text-base-content mb-4">
               {tutor.name}
             </h1>
@@ -154,33 +197,54 @@ console.log(tutor)
             <div className="space-y-3.5 text-sm text-base-content/80">
               <div className="flex items-center gap-3">
                 <LuGraduationCap className="w-5 h-5 text-primary" />
+
                 <span>
                   <strong>Institution:</strong> {tutor.institution}
                 </span>
               </div>
+
               <div className="flex items-center gap-3">
                 <LuBookOpen className="w-5 h-5 text-secondary" />
+
                 <span>
                   <strong>Experience:</strong> {tutor.experience}
                 </span>
               </div>
+
               <div className="flex items-center gap-3">
                 <LuMapPin className="w-5 h-5 text-accent" />
+
                 <span>
                   <strong>Location:</strong> {tutor.location} (
                   {tutor.teachingMode})
                 </span>
               </div>
+
               <div className="flex items-center gap-3">
                 <LuCalendar className="w-5 h-5 text-info" />
+
                 <span>
-                  <strong>Available Slot:</strong> {tutor.availableSlots}
+                  <strong>Available Slot:</strong>{" "}
+                  {tutor.availableSlots}
                 </span>
               </div>
+
               <div className="flex items-center gap-3">
                 <LuDollarSign className="w-5 h-5 text-success" />
+
                 <span>
                   <strong>Hourly Fee:</strong> ৳{tutor.hourlyFee}/hr
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <LuCalendar className="w-5 h-5 text-warning" />
+
+                <span>
+                  <strong>Session Starts:</strong>{" "}
+                  {new Date(
+                    tutor.sessionStartDate
+                  ).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -189,25 +253,45 @@ console.log(tutor)
               <span className="text-xs font-bold text-base-content/50 uppercase block mb-0.5">
                 Total Slot Availability
               </span>
+
               <span
-                className={`text-2xl font-black ${parseInt(tutor.totalSlot) === 0 ? "text-error" : "text-primary"}`}
+                className={`text-2xl font-black ${
+                  noSlotsLeft ? "text-error" : "text-primary"
+                }`}
               >
                 {tutor.totalSlot} Slots Left
               </span>
             </div>
+
+            {bookingExpired && (
+              <div className="mt-4 alert alert-warning text-sm">
+                Booking is closed because the session has already started.
+              </div>
+            )}
+
+            {noSlotsLeft && (
+              <div className="mt-4 alert alert-error text-sm">
+                All slots are already booked.
+              </div>
+            )}
           </div>
 
           <button
             onClick={handleBookingClick}
-            className="btn btn-primary w-full md:w-auto px-8 shadow-md shadow-primary/20"
+            disabled={bookingExpired || noSlotsLeft}
+            className="btn btn-primary w-full md:w-auto px-8 shadow-md shadow-primary/20 disabled:opacity-50"
           >
-            Book Session
+            {noSlotsLeft
+              ? "No Slots Available"
+              : bookingExpired
+              ? "Session Started"
+              : "Book Session"}
           </button>
         </div>
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-base-100 w-full max-w-md rounded-2xl p-6 relative shadow-2xl border border-base-200">
             <button
               onClick={() => setIsModalOpen(false)}
@@ -219,6 +303,7 @@ console.log(tutor)
             <h3 className="font-black text-xl text-center mb-1">
               Book Session
             </h3>
+
             <p className="text-xs text-base-content/50 text-center mb-6">
               Review session details before confirming your booking.
             </p>
@@ -230,9 +315,10 @@ console.log(tutor)
                     Student Name
                   </span>
                 </label>
+
                 <input
                   type="text"
-                  value={user?.name || "User Name"}
+                  value={user?.name || ""}
                   disabled
                   className="input input-bordered w-full bg-base-200 font-medium"
                 />
@@ -244,9 +330,10 @@ console.log(tutor)
                     Student Email
                   </span>
                 </label>
+
                 <input
                   type="email"
-                  value={user?.email || "user@email.com"}
+                  value={user?.email || ""}
                   disabled
                   className="input input-bordered w-full bg-base-200 font-medium"
                 />
@@ -258,6 +345,7 @@ console.log(tutor)
                     Tutor Name
                   </span>
                 </label>
+
                 <input
                   type="text"
                   value={tutor.name}
@@ -272,13 +360,13 @@ console.log(tutor)
                     Phone Number
                   </span>
                 </label>
+
                 <input
                   type="text"
                   placeholder="017XX-XXXXXX"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="input input-bordered w-full focus:input-primary"
-                  required
                 />
               </div>
             </div>
@@ -290,6 +378,7 @@ console.log(tutor)
               >
                 Cancel
               </button>
+
               <button
                 onClick={handleConfirmBooking}
                 className="btn btn-neutral"

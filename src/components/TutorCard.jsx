@@ -41,7 +41,7 @@ export default function TutorCard({ tutor }) {
           </div>
 
           <p className="text-xs text-base-content/60 line-clamp-2 pt-1 border-t border-base-100">
-            {tutor.experience}
+            {tutor.experience} years of  Experience
           </p>
         </div>
       </div>
