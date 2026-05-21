@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-
 import { LuSearch, LuCalendar, LuFilterX, LuSlidersHorizontal } from "react-icons/lu";
-import TutorCard from "../../../components/TutorCard";
+import TutorCard from "../../components/TutorCard";
+
 
 export default function TutorsPage() {
   const [tutors, setTutors] = useState([]);
@@ -10,20 +10,17 @@ export default function TutorsPage() {
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  
-  
-  const [queryTrigger, setQueryTrigger] = useState({ search: "", startDate: "", endDate: "" });
 
   useEffect(() => {
     const fetchTutors = async () => {
       setLoading(true);
       try {
-        let url = process.env.NEXT_PUBLIC_URL+"/api/tutors";
+        let url = (process.env.NEXT_PUBLIC_URL || "http://localhost:5000") + "/api/tutors";
         const params = new URLSearchParams();
         
-        if (queryTrigger.search) params.append("search", queryTrigger.search);
-        if (queryTrigger.startDate) params.append("startDate", queryTrigger.startDate);
-        if (queryTrigger.endDate) params.append("endDate", queryTrigger.endDate);
+        if (search) params.append("search", search);
+        if (startDate) params.append("startDate", startDate);
+        if (endDate) params.append("endDate", endDate);
         
         if (params.toString()) {
           url += `?${params.toString()}`;
@@ -40,18 +37,12 @@ export default function TutorsPage() {
     };
 
     fetchTutors();
-  }, [queryTrigger]);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    setQueryTrigger({ search, startDate, endDate });
-  };
+  }, [search, startDate, endDate]);
 
   const handleClearFilters = () => {
     setSearch("");
     setStartDate("");
     setEndDate("");
-    setQueryTrigger({ search: "", startDate: "", endDate: "" });
   };
 
   return (
@@ -67,15 +58,15 @@ export default function TutorsPage() {
             Find Your Perfect Tutor
           </h1>
           <p className="text-sm md:text-base text-base-content/60 leading-relaxed">
-            Connect with top-rated tutors. Filter by name, institution, or registration dates to find the absolute match for your schedule.
+            Search tutors by name and filter by registration dates seamlessly with realtime updates.
           </p>
         </div>
 
-        {/* Search & Filter Panel */}
-        <div className="bg-base-100 p-6 rounded-2xl shadow-sm border border-base-300/60 max-w-5xl mx-auto mb-12">
-          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        {/* Live Filter Panel */}
+        <div className="bg-base-100 p-6 rounded-2xl shadow-sm border border-base-300/60 max-w-4xl mx-auto mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-11 gap-4 items-end">
             
-            {/* Search Input */}
+            {/* Live Search Input */}
             <div className="form-control md:col-span-5">
               <label className="label pt-0 pb-1.5">
                 <span className="label-text font-bold text-xs text-base-content/70">Search Tutor</span>
@@ -84,7 +75,7 @@ export default function TutorsPage() {
                 <LuSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search by name, university, or location..."
+                  placeholder="Type name to find tutors..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="input input-bordered w-full pl-11 bg-base-200/50 focus:bg-base-100 transition-colors"
@@ -92,7 +83,7 @@ export default function TutorsPage() {
               </div>
             </div>
 
-            {/* Start Date */}
+            {/* Live Start Date */}
             <div className="form-control md:col-span-3">
               <label className="label pt-0 pb-1.5">
                 <span className="label-text font-bold text-xs text-base-content/70 flex items-center gap-1">
@@ -107,7 +98,7 @@ export default function TutorsPage() {
               />
             </div>
 
-            {/* End Date */}
+            {/* Live End Date */}
             <div className="form-control md:col-span-3">
               <label className="label pt-0 pb-1.5">
                 <span className="label-text font-bold text-xs text-base-content/70 flex items-center gap-1">
@@ -121,23 +112,16 @@ export default function TutorsPage() {
                 className="input input-bordered w-full bg-base-200/50"
               />
             </div>
-
-            {/* Submit Button */}
-            <div className="md:col-span-1 w-full">
-              <button type="submit" className="btn btn-primary w-full shadow-md shadow-primary/10">
-                Find
-              </button>
-            </div>
-          </form>
+          </div>
 
           {/* Active Filter Clear Badge */}
-          {(queryTrigger.search || queryTrigger.startDate || queryTrigger.endDate) && (
+          {(search || startDate || endDate) && (
             <div className="flex justify-end mt-4 pt-3 border-t border-base-200">
               <button
                 onClick={handleClearFilters}
                 className="btn btn-ghost btn-xs text-error gap-1.5 hover:bg-error/10 rounded-lg normal-case"
               >
-                <LuFilterX className="w-4 h-4" /> Clear All Filters
+                <LuFilterX className="w-4 h-4" /> Clear Filters
               </button>
             </div>
           )}
@@ -147,7 +131,7 @@ export default function TutorsPage() {
         {loading ? (
           <div className="flex flex-col justify-center items-center py-24 space-y-4">
             <span className="loading loading-spinner loading-lg text-primary"></span>
-            <p className="text-xs font-semibold tracking-wider text-base-content/40 uppercase">Filtering Results...</p>
+            <p className="text-xs font-semibold tracking-wider text-base-content/40 uppercase">Fetching Tutors...</p>
           </div>
         ) : tutors.length === 0 ? (
           <div className="text-center py-20 bg-base-100 rounded-2xl border border-dashed border-base-300 max-w-3xl mx-auto shadow-inner">
