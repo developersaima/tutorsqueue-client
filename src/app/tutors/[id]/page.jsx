@@ -129,15 +129,15 @@ export default function TutorDetailsPage({ params: paramsPromise }) {
       </div>
     );
   }
-
+console.log(tutor)
   return (
     <div className="bg-base-200/40 min-h-screen py-12 px-4">
       <div className="max-w-5xl mx-auto bg-base-100 rounded-3xl shadow-sm border border-base-300/60 overflow-hidden grid grid-cols-1 md:grid-cols-12">
         <div className="md:col-span-5 relative bg-base-300 min-h-[340px] md:min-h-full">
           <Image
             fill
-            src={tutor.photoURL}
-            alt={tutor.tutorName}
+            src={tutor.photo}
+            alt={tutor.name}
             className="w-full h-full object-cover absolute inset-0"
           />
         </div>
@@ -148,7 +148,7 @@ export default function TutorDetailsPage({ params: paramsPromise }) {
               {tutor.subject}
             </div>
             <h1 className="text-3xl font-black text-base-content mb-4">
-              {tutor.tutorName}
+              {tutor.name}
             </h1>
 
             <div className="space-y-3.5 text-sm text-base-content/80">
@@ -174,7 +174,7 @@ export default function TutorDetailsPage({ params: paramsPromise }) {
               <div className="flex items-center gap-3">
                 <LuCalendar className="w-5 h-5 text-info" />
                 <span>
-                  <strong>Available Slot:</strong> {tutor.availableDaysAndTime}
+                  <strong>Available Slot:</strong> {tutor.availableSlots}
                 </span>
               </div>
               <div className="flex items-center gap-3">
