@@ -2,9 +2,21 @@
 import Link from "next/link";
 import Image from "next/image";
 import ThemeController from "./ThemeController";
+import { signOut, useSession } from "../lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function Navbar() {
-  const user = null;
+   const { 
+        data: session, 
+        
+        
+    } = useSession()
+  const user = session?.user;
+  const handleSignout=async()=>{
+    await signOut()
+    toast.success("Log out successfull")
+    
+  }
 
   return (
     <div className="navbar bg-base-100 shadow-sm px-4 md:px-8 sticky top-0 z-50">
@@ -63,8 +75,8 @@ export default function Navbar() {
               </div>
             </div>
             <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow-md border border-base-200">
-              <li><Link href="/profile">Profile Dashboard</Link></li>
-              <li><button onClick={() => console.log("Logout")}>Logout</button></li>
+              {/* <li><Link href="/profile">Profile Dashboard</Link></li> */}
+              <li><button onClick={handleSignout}>Logout</button></li>
             </ul>
           </div>
         ) : (
