@@ -51,7 +51,7 @@ export default function Tutors() {
       <div className="container mx-auto px-4 max-w-7xl">
         
         {/* Header Section */}
-        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+        <div className="text-center mx-auto mb-12 space-y-3">
           <div className="badge badge-primary badge-outline gap-1.5 px-3 py-2.5 text-xs font-semibold uppercase tracking-wider">
             <LuSlidersHorizontal className="w-3.5 h-3.5" /> Explore Mentors
           </div>
@@ -64,7 +64,7 @@ export default function Tutors() {
         </div>
 
         {/* Live Filter Panel */}
-        <div className="bg-base-100 p-6 rounded-2xl shadow-sm border border-base-300/60 max-w-4xl mx-auto mb-12">
+        <div className="bg-base-100 p-6 rounded-2xl shadow-sm border border-base-300/60 container mx-auto mb-12">
           <div className="grid grid-cols-1 md:grid-cols-11 gap-4 items-end">
             
             {/* Live Search Input */}
