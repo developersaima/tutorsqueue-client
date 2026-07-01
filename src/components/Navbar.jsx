@@ -82,59 +82,52 @@ export default function Navbar() {
           </ul>
         </div>
         
-        <Link href="/" className="flex items-center gap-3 hover:opacity-95 transition-opacity group">
-          <div className="relative w-10 h-10 flex items-center justify-center bg-base-100 border border-base-300/80 rounded-xl shadow-md overflow-hidden group-hover:shadow-primary/20 group-hover:border-primary/30 transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-secondary/5 opacity-100 group-hover:scale-110 transition-transform duration-300" />
-            
-            <svg
-              className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-105"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient id="edu-search-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" className="[--start-color:theme(colors.primary)]" stopColor="var(--start-color)" />
-                  <stop offset="100%" className="[--end-color:theme(colors.secondary)]" stopColor="var(--end-color)" />
-                </linearGradient>
-              </defs>
-              
-              <path
-                d="M12 2L2 6.5L12 11L22 6.5L12 2Z"
-                stroke="url(#edu-search-gradient)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M6 8.3V13C6 15.5 8.7 17.5 12 17.5C12.7 17.5 13.4 17.4 14 17.1"
-                stroke="url(#edu-search-gradient)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              
-              <circle
-                cx="16.5"
-                cy="16.5"
-                r="3.5"
-                stroke="url(#edu-search-gradient)"
-                strokeWidth="2"
-              />
-              <path
-                d="M19 19L22 22"
-                stroke="url(#edu-search-gradient)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <span className="text-xl font-black tracking-tight hidden sm:block">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/90">Tutors</span>
-            <span className="text-base-content font-bold">Queue</span>
-          </span>
-        </Link>
+       <Link href="/" className="flex items-center gap-3 hover:opacity-95 transition-opacity group">
+  <div className="relative w-10 h-10 flex items-center justify-center bg-base-100 border border-base-300/80 text-primary rounded-xl shadow-md overflow-hidden group-hover:shadow-primary/20 group-hover:border-primary/30 transition-all duration-300">
+    <div className="absolute inset-0 bg-primary/5 opacity-100 group-hover:scale-110 transition-transform duration-300" />
+    
+    <svg
+      className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-105"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M12 2L2 6.5L12 11L22 6.5L12 2Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6 8.3V13C6 15.5 8.7 17.5 12 17.5C12.7 17.5 13.4 17.4 14 17.1"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      
+      <circle
+        cx="16.5"
+        cy="16.5"
+        r="3.5"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M19 19L22 22"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </div>
+  <span className="text-xl font-black tracking-tight hidden sm:block">
+    <span className="text-primary">Tutors</span>
+    <span className="text-base-content font-bold">Queue</span>
+  </span>
+</Link>
       </div>
 
       <div className="navbar-center hidden lg:flex">
