@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { LuX, LuTrash2, LuFolderGit2, LuUpload } from "react-icons/lu";
+import { LuX, LuTrash2, LuFolderGit2, LuPencil } from "react-icons/lu";
 import toast from "react-hot-toast";
 import { authClient, useSession } from "../lib/auth-client";
-import { FiLoader } from "react-icons/fi";
 
 const IMAGEBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_KEY;
 
@@ -22,8 +21,8 @@ export default function MyTutorsPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [editFormData, setEditFormData] = useState({
     _id: "",
-    tutorName: "",
-    photoURL: "",
+    name: "",
+    photo: "",
     subject: "Mathematics",
     availableDays: "",
     availableTime: "",
@@ -50,6 +49,7 @@ export default function MyTutorsPage() {
       if (res.ok) {
         const data = await res.json();
         setTutors(data);
+        
       }
     } catch (error) {
       console.error("Error fetching tutors:", error);
@@ -97,13 +97,17 @@ export default function MyTutorsPage() {
   };
 
   const uploadImageToImageBB = async (file) => {
+    if (!IMAGEBB_API_KEY) {
+      toast.error("ImgBB API key missing. Check your environment variables.");
+      return null;
+    }
+
     setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append("image", file);
-      formData.append("key", IMAGEBB_API_KEY);
 
-      const response = await fetch("https://api.imgbb.com/1/upload", {
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMAGEBB_API_KEY}`, {
         method: "POST",
         body: formData,
       });
@@ -113,7 +117,7 @@ export default function MyTutorsPage() {
       if (data.success) {
         const imageUrl = data.data.url;
         setImagePreview(imageUrl);
-        setEditFormData(prev => ({ ...prev, photoURL: imageUrl }));
+        setEditFormData(prev => ({ ...prev, photo: imageUrl }));
         toast.success("Image uploaded successfully!");
         return imageUrl;
       } else {
@@ -129,19 +133,33 @@ export default function MyTutorsPage() {
   };
 
   const triggerEditModal = (tutor) => {
-    const availableDays = tutor.availableDaysAndTime?.split(" ")[0] || "";
-    const availableTime = tutor.availableDaysAndTime?.split(" ").slice(1).join(" ") || "";
+    // availableSlots অথবা alternative key থাকলে দুটোই হ্যান্ডেল করার জন্য সেফ স্প্লিট মেথড
+    const rawSlots = tutor.availableSlots || tutor.availableDaysAndTime || "";
+    const cleanSlots = rawSlots.trim();
+    
+    let availableDays = "";
+    let availableTime = "";
+
+    if (cleanSlots) {
+      const firstSpaceIndex = cleanSlots.indexOf(" ");
+      if (firstSpaceIndex !== -1) {
+        availableDays = cleanSlots.substring(0, firstSpaceIndex);
+        availableTime = cleanSlots.substring(firstSpaceIndex + 1).trim();
+      } else {
+        availableDays = cleanSlots;
+      }
+    }
     
     setEditFormData({
-      _id: tutor._id,
-      tutorName: tutor.name || "",
-      photoURL: tutor.photo || "",
+      _id: tutor._id || "",
+      name: tutor.name || "",
+      photo: tutor.photo || "",
       subject: tutor.subject || "Mathematics",
       availableDays: availableDays,
       availableTime: availableTime,
-      hourlyFee: tutor.hourlyFee || "",
-      totalSlot: tutor.totalSlot || "",
-      sessionStartDate: tutor.sessionStartDate || "",
+      hourlyFee: tutor.hourlyFee !== undefined ? tutor.hourlyFee : "",
+      totalSlot: tutor.totalSlot !== undefined ? tutor.totalSlot : "",
+      sessionStartDate: tutor.sessionStartDate ? tutor.sessionStartDate.split("T")[0] : "",
       institution: tutor.institution || "",
       experience: tutor.experience || "1-2 years",
       location: tutor.location || "",
@@ -155,35 +173,30 @@ export default function MyTutorsPage() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!validTypes.includes(file.type)) {
       toast.error("Please upload a valid image file (JPEG, PNG, GIF, WEBP)");
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
       return;
     }
 
-    // Show local preview immediately
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
     };
     reader.readAsDataURL(file);
 
-    // Upload to ImageBB
     await uploadImageToImageBB(file);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate photo URL
-    if (!editFormData.photoURL) {
+    if (!editFormData.photo) {
       toast.error("Please upload a profile photo");
       return;
     }
@@ -193,9 +206,10 @@ export default function MyTutorsPage() {
       const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:5000";
       const { data: tokenData } = await authClient.token();
 
+      const { availableDays, availableTime, ...restData } = editFormData;
       const formattedData = {
-        ...editFormData,
-        availableDaysAndTime: `${editFormData.availableDays} ${editFormData.availableTime}`,
+        ...restData,
+        availableSlots: `${availableDays} ${availableTime}`.trim(),
         hourlyFee: Number(editFormData.hourlyFee),
         totalSlot: Number(editFormData.totalSlot),
       };
@@ -257,7 +271,7 @@ export default function MyTutorsPage() {
               Manage your registered tutors
             </p>
           </div>
-          <div className="badge badge-primary badge-lg gap-2">
+          <div className="badge badge-primary badge-lg gap-2 font-semibold">
             {tutors.length} {tutors.length === 1 ? "Tutor" : "Tutors"}
           </div>
         </div>
@@ -266,7 +280,7 @@ export default function MyTutorsPage() {
           <div className="bg-base-100 rounded-2xl p-16 text-center border-2 border-dashed border-base-300/60 hover:border-primary/50 transition-colors">
             <div className="flex flex-col items-center gap-4">
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <LuFolderGit2 className="w-10 h-10 text-primary/60" />
+                <LuFolderGit2 className="w-10 h-10 text-primary" />
               </div>
               <p className="text-base-content/60 font-medium text-lg">No tutors added yet</p>
               <p className="text-base-content/40 text-sm">Start by adding your first tutor</p>
@@ -308,17 +322,20 @@ export default function MyTutorsPage() {
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="badge badge-ghost badge-md">{tutor.subject}</span>
+                        <span className="badge badge-ghost badge-md font-medium text-base-content/80">{tutor.subject}</span>
                       </td>
                       <td className="py-4 px-6 text-base-content/60">
-                        <span className="text-xs">{tutor.availableDaysAndTime}</span>
+                        {/* টেবিল লিস্টে ভ্যালু শো করানোর জন্য fallback সহ ফিক্স করা হয়েছে */}
+                        <span className="text-xs font-medium">
+                          {tutor.availableSlots || tutor.availableDaysAndTime || "N/A"}
+                        </span>
                       </td>
                       <td className="py-4 px-6">
                         <span className="font-semibold text-primary">৳{tutor.hourlyFee}</span>
                         <span className="text-xs text-base-content/40">/hr</span>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="badge badge-success/20 text-success border-none font-semibold text-xs px-3 py-1.5">
+                        <span className="badge badge-success bg-success/10 text-success border-none font-semibold text-xs px-3 py-1.5">
                           {tutor.totalSlot} slots
                         </span>
                       </td>
@@ -332,16 +349,18 @@ export default function MyTutorsPage() {
                       <td className="py-4 px-6">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => triggerDeleteModal(tutor._id)}
-                            className="btn btn-sm btn-square btn-ghost text-error/70 hover:text-error hover:bg-error/10 transition-all"
+                            onClick={() => triggerEditModal(tutor)}
+                            className="btn btn-sm btn-square btn-ghost text-primary hover:bg-primary/10 transition-all"
+                            title="Edit Tutor"
                           >
-                            <LuTrash2 className="w-4 h-4" />
+                            <LuPencil className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => triggerEditModal(tutor)}
-                            className="btn btn-sm btn-square btn-ghost text-primary/70 hover:text-primary hover:bg-primary/10 transition-all"
+                            onClick={() => triggerDeleteModal(tutor._id)}
+                            className="btn btn-sm btn-square btn-ghost text-error/70 hover:text-error hover:bg-error/10 transition-all"
+                            title="Delete Tutor"
                           >
-                            <LuFolderGit2 className="w-4 h-4" />
+                            <LuTrash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -420,8 +439,8 @@ export default function MyTutorsPage() {
                   </label>
                   <input
                     type="text"
-                    value={editFormData.tutorName}
-                    onChange={(e) => setEditFormData({ ...editFormData, tutorName: e.target.value })}
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
                     className="input input-bordered w-full focus:input-primary transition-all"
                     placeholder="Enter tutor name"
                     required
@@ -456,7 +475,7 @@ export default function MyTutorsPage() {
                         />
                         {isUploading && (
                           <div className="absolute inset-0 flex items-center justify-center bg-base-100/50 rounded-lg">
-                            <FiLoader className="w-5 h-5 animate-spin text-primary" />
+                            <span className="loading loading-spinner loading-sm text-primary"></span>
                           </div>
                         )}
                       </div>
@@ -522,6 +541,7 @@ export default function MyTutorsPage() {
                   >
                     <option value="">Select time</option>
                     <option value="9:00 AM - 12:00 PM">9:00 AM - 12:00 PM</option>
+                    <option value="10:00 AM - 12:00 PM">10:00 AM - 12:00 PM</option>
                     <option value="12:00 PM - 3:00 PM">12:00 PM - 3:00 PM</option>
                     <option value="3:00 PM - 6:00 PM">3:00 PM - 6:00 PM</option>
                     <option value="6:00 PM - 9:00 PM">6:00 PM - 9:00 PM</option>
@@ -566,7 +586,7 @@ export default function MyTutorsPage() {
                   </label>
                   <input
                     type="date"
-                    value={editFormData.sessionStartDate ? editFormData.sessionStartDate.split("T")[0] : ""}
+                    value={editFormData.sessionStartDate}
                     onChange={(e) => setEditFormData({ ...editFormData, sessionStartDate: e.target.value })}
                     className="input input-bordered w-full focus:input-primary transition-all"
                     required
@@ -658,7 +678,7 @@ export default function MyTutorsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
+                  className="btn btn-primary px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all text-white"
                   disabled={editLoading || isUploading}
                 >
                   {editLoading ? <span className="loading loading-spinner loading-sm"></span> : "Save Changes"}
