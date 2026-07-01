@@ -153,22 +153,20 @@ export default function MyTutorsPage() {
     }
 
     setEditFormData({
-      _id: tutor._id || "",
+      _id: tutor._id,
       name: tutor.name || "",
       photo: tutor.photo || "",
       subject: tutor.subject || "Mathematics",
-      availableDays: availableDays,
-      availableTime: availableTime,
-      hourlyFee: tutor.hourlyFee !== undefined ? tutor.hourlyFee : "",
-      totalSlot: tutor.totalSlot !== undefined ? tutor.totalSlot : "",
-      sessionStartDate: tutor.sessionStartDate
-        ? tutor.sessionStartDate.split("T")[0]
-        : "",
+      availableSlots: tutor.availableSlots || "",
+      hourlyFee: tutor.hourlyFee || "",
+      totalSlot: tutor.totalSlot || "",
+      sessionStartDate: tutor.sessionStartDate || "",
       institution: tutor.institution || "",
       experience: tutor.experience || "1-2 years",
       location: tutor.location || "",
       teachingMode: tutor.teachingMode || "Online",
     });
+
     setImagePreview(tutor.photo || null);
     setIsEditModalOpen(true);
   };
